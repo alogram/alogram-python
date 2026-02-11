@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "alogram-payrisk"
-version = "0.1.6-rc.8"
+version = "0.1.6-rc.14"
 description = "The official Alogram Payrisk 'Smart' SDK for Python. Features built-in resiliency, ergonomic risk intelligence, and automated identity management."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "Apache-2.0"}
 authors = [
-    {name = "Alogram Engineering", email = "support@alogram.ai"}
+    {name = "Alogram Inc.", email = "support@alogram.ai"}
 ]
 keywords = ["alogram", "payrisk", "fraud", "risk", "payments"]
 classifiers = [
@@ -39,9 +39,9 @@ package-data = {"*" = ["py.typed"]}
 
 [project.urls]
 Homepage = "https://www.alogram.ai"
-Repository = "https://github.com/alogram/payrisk-python"
+Repository = "https://github.com/alogram/alogram-python"
 Documentation = "https://developers.alogram.ai"
-"Bug Tracker" = "https://github.com/alogram/payrisk-python/issues"
+"Bug Tracker" = "https://github.com/alogram/alogram-python/issues"
 
 [project.optional-dependencies]
 telemetry = [
