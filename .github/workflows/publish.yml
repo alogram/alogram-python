@@ -6,7 +6,12 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Run a dry run (do not publish to PyPI)'
+        description: 'Run a dry run (do not publish anywhere)'
+        required: true
+        default: 'true'
+        type: boolean
+      publish_to_testpypi:
+        description: 'Publish to TestPyPI instead of production PyPI'
         required: true
         default: 'true'
         type: boolean
@@ -32,11 +37,18 @@ jobs:
         run: uv build
         
       - name: Publish to PyPI
-        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'false')
+        if: (github.event_name == 'release' || github.event.inputs.dry_run == 'false') && github.event.inputs.publish_to_testpypi == 'false'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           print-hash: true
+
+      - name: Publish to TestPyPI
+        if: github.event.inputs.dry_run == 'false' && github.event.inputs.publish_to_testpypi == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          print-hash: true
           
       - name: Dry Run Check
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true'
-        run: echo "🧪 [DRY RUN] Package built successfully. Would have published to PyPI."
+        if: github.event.inputs.dry_run == 'true'
+        run: echo "🧪 [DRY RUN] Package built successfully. Skipping upload step."

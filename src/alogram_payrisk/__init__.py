@@ -3,6 +3,7 @@
 
 # 1. Core Clients
 from .client import AlogramRiskClient, AlogramPublicClient
+from .testing import MockRiskClient
 
 # 2. Professional Exceptions
 from .exceptions import (
@@ -30,6 +31,7 @@ from ._generated.payrisk_v1.models.card import Card
 __all__ = [
     "AlogramRiskClient",
     "AlogramPublicClient",
+    "MockRiskClient",
     "AlogramError",
     "AuthenticationError",
     "RateLimitError",

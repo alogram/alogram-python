@@ -3,13 +3,18 @@
 
 import logging
 import uuid
-from typing import Any, Optional
+from typing import Any, Optional, cast, Callable
 
-from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
+from tenacity import (
+    retry,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_exponential_jitter,
+)
 
 # --- OpenTelemetry Support (Soft Dependency) ---
 try:
-    from opentelemetry import trace
+    from opentelemetry import trace  # type: ignore
 
     OTEL_AVAILABLE = True
 except ImportError:
@@ -38,7 +43,7 @@ from .exceptions import (
 log = logging.getLogger("alogram.payrisk")
 
 
-def is_retryable_error(exception: Exception) -> bool:
+def is_retryable_error(exception: BaseException) -> bool:
     """Helper to determine if an error should trigger a retry."""
     if isinstance(exception, (RateLimitError, InternalServerError)):
         return True
@@ -50,7 +55,7 @@ class AlogramBaseClient:
 
     def __init__(
         self,
-        base_url: str,
+        base_url: str = "https://api.alogram.ai",
         api_key: Optional[str] = None,
         access_token: Optional[str] = None,
         tenant_id: Optional[str] = None,
@@ -77,7 +82,7 @@ class AlogramBaseClient:
 
         # Initialize Tracer
         if OTEL_AVAILABLE:
-            self.tracer = trace.get_tracer("alogram.payrisk", "0.1.0")
+            self.tracer = trace.get_tracer("alogram.payrisk", "0.1.6-rc.5")
         else:
             self.tracer = None
 
@@ -86,17 +91,18 @@ class AlogramBaseClient:
 
     def _map_exception(self, e: ApiException) -> AlogramError:
         msg = f"API Error: {e.reason}"
+        body_str = cast(Optional[str], e.body)
         if e.status == 401 or e.status == 403:
-            return AuthenticationError(msg, status=e.status, body=e.body)
+            return AuthenticationError(msg, status=e.status, body=body_str)
         if e.status == 429:
-            return RateLimitError(msg, status=e.status, body=e.body)
+            return RateLimitError(msg, status=e.status, body=body_str)
         if e.status == 400 or e.status == 422:
-            return ValidationError(msg, status=e.status, body=e.body)
+            return ValidationError(msg, status=e.status, body=body_str)
         if e.status >= 500:
-            return InternalServerError(msg, status=e.status, body=e.body)
-        return AlogramError(msg, status=e.status, body=e.body)
+            return InternalServerError(msg, status=e.status, body=body_str)
+        return AlogramError(msg, status=e.status, body=body_str)
 
-    def _to_json_friendly_dict(self, model: Any) -> dict:
+    def _to_json_friendly_dict(self, model: Any) -> Any:
         if hasattr(model, "to_dict"):
             return model.to_dict()
         return model
@@ -120,7 +126,7 @@ class AlogramRiskClient(AlogramBaseClient):
 
     @retry(
         stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
+        wait=wait_exponential_jitter(initial=1, max=10, jitter=1),
         retry=retry_if_exception(is_retryable_error),
         reraise=True,
     )
@@ -151,7 +157,7 @@ class AlogramRiskClient(AlogramBaseClient):
 
             with span_ctx or open("/dev/null", "w"):
                 result = self.api.risk_check(
-                    check_request=self._to_json_friendly_dict(request),
+                    check_request=cast(Any, self._to_json_friendly_dict(request)),
                     x_idempotency_key=ik,
                     x_trace_id=tid,
                 )
@@ -177,7 +183,7 @@ class AlogramRiskClient(AlogramBaseClient):
         try:
             with span_ctx or open("/dev/null", "w"):
                 self.api.ingest_signals(
-                    signals_request=self._to_json_friendly_dict(request),
+                    signals_request=cast(Any, self._to_json_friendly_dict(request)),
                     x_idempotency_key=ik,
                     x_trace_id=tid,
                 )
@@ -197,7 +203,7 @@ class AlogramRiskClient(AlogramBaseClient):
         try:
             with span_ctx or open("/dev/null", "w"):
                 self.api.ingest_payment_event(
-                    payment_event=self._to_json_friendly_dict(event),
+                    payment_event=cast(Any, self._to_json_friendly_dict(event)),
                     x_idempotency_key=ik,
                     x_trace_id=tid,
                 )
@@ -234,7 +240,7 @@ class AlogramPublicClient(AlogramBaseClient):
         try:
             with span_ctx or open("/dev/null", "w"):
                 self.api.ingest_signals(
-                    signals_request=self._to_json_friendly_dict(request),
+                    signals_request=cast(Any, self._to_json_friendly_dict(request)),
                     x_idempotency_key=ik,
                     x_trace_id=tid,
                 )

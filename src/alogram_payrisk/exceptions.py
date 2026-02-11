@@ -2,10 +2,13 @@
 # All rights reserved.
 
 
+from typing import Optional
+
+
 class AlogramError(Exception):
     """Base exception for all Alogram SDK errors."""
 
-    def __init__(self, message: str, status: int = None, body: str = None):
+    def __init__(self, message: str, status: Optional[int] = None, body: Optional[str] = None):
         super().__init__(message)
         self.status = status
         self.body = body
