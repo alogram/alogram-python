@@ -82,7 +82,7 @@ class AlogramBaseClient:
 
         # Initialize Tracer
         if OTEL_AVAILABLE:
-            self.tracer = trace.get_tracer("alogram.payrisk", "0.1.6-rc.14")
+            self.tracer = trace.get_tracer("alogram.payrisk", "0.1.6")
         else:
             self.tracer = None
 
