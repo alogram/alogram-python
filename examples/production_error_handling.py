@@ -5,19 +5,18 @@
 # to implement logic like "Fail Open" or customized user messaging.
 
 import logging
+
 from alogram_payrisk import (
     AlogramRiskClient,
-    ValidationError,
     AuthenticationError,
-    RateLimitError,
-    InternalServerError,
     CheckRequest,
+    InternalServerError,
+    RateLimitError,
+    ValidationError,
 )
 
 # In production, use structured logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger("alogram.payrisk.handler")
 
 client = AlogramRiskClient(base_url="https://api.alogram.ai", api_key="sk_test_...")
@@ -56,9 +55,7 @@ def process_payment_with_risk_check(request_dict):
         # If they still reach here, the system is exhausted.
         # STRATEGY: 'Fail Open' - log the error but allow the payment to proceed
         # to avoid blocking revenue, then review the transaction later.
-        logger.error(
-            f"⚠️ SYSTEM DEGRADED ({e.status}): Allowing transaction via Fail-Open."
-        )
+        logger.error(f"⚠️ SYSTEM DEGRADED ({e.status}): Allowing transaction via Fail-Open.")
         return {"status": "approved", "note": "manual_review_required"}
 
     except Exception as e:

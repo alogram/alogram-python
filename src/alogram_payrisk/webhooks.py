@@ -1,8 +1,9 @@
 # Copyright (c) 2025 Alogram Inc.
 # All rights reserved.
 
-import hmac
 import hashlib
+import hmac
+
 from .exceptions import ValidationError
 
 
@@ -33,9 +34,7 @@ class WebhookVerifier:
         if not header_signature or not secret:
             raise ValidationError("Missing signature or secret")
 
-        expected_signature = hmac.new(
-            secret.encode("utf-8"), payload, hashlib.sha256
-        ).hexdigest()
+        expected_signature = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
 
         if not hmac.compare_digest(expected_signature, header_signature):
             raise ValidationError("Invalid webhook signature")

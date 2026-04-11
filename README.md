@@ -3,14 +3,24 @@
 [![PyPI version](https://badge.fury.io/py/alogram-payrisk.svg)](https://badge.fury.io/py/alogram-payrisk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-The official Alogram PayRisk 'Smart' SDK for Python. Built for modern financial systems that require high resiliency, ergonomic risk intelligence, and automated identity management.
+The official Python client for the **Alogram PayRisk Engine**. 
+
+Alogram PayRisk is a decision management and risk orchestration engine for global commerce. It fuses machine learning, behavioral analytics, and deterministic business rules into a high-fidelity scoring pipeline designed for enterprise scale and auditability.
+
+## 🧠 The Three-Expert Architecture
+
+The SDK provides unified access to three specialized risk experts:
+
+-   **Risk Scoring**: Real-time assessment and decision orchestration for purchases.
+-   **Signal Intelligence**: Ingestion of behavioral telemetry and payment lifecycle events.
+-   **Forensic Data**: Deep visibility into historical assessments and decision transparency.
 
 ## 🚀 Features
 
--   **🏢 Smart Client Architecture**: Specialized clients for server-side (`AlogramRiskClient`) and public-facing (`AlogramPublicClient`) environments.
+-   **🏢 Smart Client Architecture**: Specialized clients for server-side (`AlogramRiskClient`) and public-facing (`AlogramPublicClient`).
 -   **🛡️ Automated Identity**: Injects `x-api-key`, `Authorization`, and tenant headers automatically.
--   **🔄 Built-in Resiliency**: Transparent exponential backoff and jittered retries powered by `tenacity`.
--   **🕵️ OpenTelemetry Ready**: Native tracing support for deep observability into risk decisions.
+-   **🔄 Built-in Resiliency**: Automatic exponential backoff and jittered retries (powered by `tenacity`).
+-   **🕵️ Native Observability**: Built-in OpenTelemetry tracing for monitoring risk decision latency and outcomes.
 -   **🧩 Type Safe**: Built with Pydantic v2 and full PEP 561 compliance (`py.typed`).
 
 ## 📦 Installation
@@ -21,107 +31,89 @@ pip install alogram-payrisk
 
 ## 🛠️ Quick Start
 
-### Evaluate Risk (Server-Side)
+### 1. Evaluate Risk (Risk Scoring Expert)
+
+Assess a purchase in real-time. This invokes the authoritative scoring pipeline.
 
 ```python
-from alogram_payrisk import AlogramRiskClient
-from alogram_payrisk.models import CheckRequest, Purchase, Identity
+from alogram_payrisk import AlogramRiskClient, CheckRequest, Purchase, Identity
 
-# Initialize the smart client
-client = AlogramRiskClient(
-    api_key="sk_live_your_secret_key",
-    tenant_id="tenant_123"
-)
+client = AlogramRiskClient(api_key="sk_live_...", tenant_id="tenant_123")
 
-# Perform the check with automatic retries and tracing
+# Perform the check via the Risk Scoring expert
 decision = client.check_risk(CheckRequest(
     purchase=Purchase(amount=99.99, currency="USD"),
     identity=Identity(email="customer@example.com")
 ))
 
-print(f"Risk Decision: {decision.decision}")
+print(f"Decision: {decision.decision} | Score: {decision.decision_score}")
+```
+
+### 2. Ingest Lifecycle Events (Signal Intelligence Expert)
+
+Stream payment lifecycle updates to the Engine for continuous model training.
+
+```python
+from alogram_payrisk import PaymentEvent, PaymentOutcome, PaymentAuthorizationOutcome
+
+client.ingest_event(PaymentEvent(
+    event_type="authorization",
+    payment_intent_id="pi_123...",
+    amount=99.99,
+    currency="USD",
+    outcome=PaymentOutcome(
+        authorization=PaymentAuthorizationOutcome(approved=True, responseCode="00")
+    )
+))
 ```
 
 ---
 
-## 🛡️ Error Handling
+## 🛡️ Error Handling & Resiliency
 
-The SDK provides specific exceptions for robust error state management:
+The SDK distinguishes between transient network issues and validation errors.
 
 ```python
-from alogram_payrisk.exceptions import RateLimitError, ValidationError, AlogramError
+from alogram_payrisk.exceptions import ValidationError, AlogramError
 
 try:
     decision = client.check_risk(request)
-except RateLimitError:
-    # 🔄 Standard exponential backoff is handled by the SDK
-    pass
 except ValidationError as e:
-    # ❌ Check e.body for specific field validation errors
-    print(f"Invalid request: {e}")
+    # ❌ Handle invalid input (e.g., invalid BIN or malformed email)
+    print(f"Validation Failed: {e.body}") 
 except AlogramError as e:
-    # 🚨 Generic fallback for other API issues
-    print(f"API Error: {e.status_code}")
+    # 🚨 Handle generic API or Authentication errors
+    print(f"API Error [{e.status}]: {e.message}")
 ```
 
-## 🔑 Authentication & Keys
+## 🕵️ Observability (OpenTelemetry)
 
-To use the Alogram SDK, you need API keys from the [Alogram Dashboard](https://dashboard.alogram.ai/keys).
+The SDK automatically detects OpenTelemetry. If present, it creates spans for all API calls.
 
-| Key Type | Prefix | Client | Use Case |
-| :--- | :--- | :--- | :--- |
-| **Secret Key** | `sk_live_...` | `AlogramRiskClient` | Server-side risk checks. **Never expose.** |
-| **Publishable Key** | `pk_live_...` | `AlogramPublicClient` | Frontend signals & browser ingestion. |
+```python
+from opentelemetry import trace
 
-## 🤖 For AI Agents (Integration Context)
+# Spans will automatically include 'alogram.decision' and 'alogram.trace_id'
+with trace.get_tracer(__name__).start_as_current_span("checkout"):
+    decision = client.check_risk(request)
+```
 
-If you are using an AI agent (like ChatGPT, Claude, or Gemini) to help with your integration, provide it with the following context:
+## 🏗️ Environments
 
-> "I am integrating the Alogram PayRisk Python SDK. I need to implement a risk check during my checkout endpoint. Use the `AlogramRiskClient`, handle `RateLimitError` gracefully, and ensure you use the `idempotency_key` from my transaction ID."
+| Environment | Base URL | Key Type |
+| :--- | :--- | :--- |
+| **Production** | `https://api.alogram.ai` | `sk_live_...` |
+| **Sandbox** | `https://api-sandbox.alogram.ai` | `sk_test_...` |
+| **Local** | `http://localhost:8080` | `test` |
 
 ---
 
-## 🧪 Local Testing & Mocking
+## 🤖 For AI Agents
 
-For fast unit tests without network dependencies, use the built-in `MockRiskClient`.
-
-```python
-from alogram_payrisk.testing import MockRiskClient
-
-mock = MockRiskClient()
-mock.queue_decision("decline", score=0.95, reason="high_risk_ip")
-
-# Your app code uses the mock as if it were a real client
-decision = my_app.process_checkout(mock)
-assert decision.decision == "decline"
-```
-
-## 🏗️ Environment Testing
-
-### Alogram Sandbox
-For safe integration testing without impacting production data, point your client to the Sandbox environment:
-```python
-client = AlogramRiskClient(
-    api_key="sk_test_...",
-    base_url="https://api-sandbox.alogram.ai"
-)
-```
-
-### Local Emulator
-For hermetic local testing, run the **Alogram Local Emulator**:
-```bash
-docker run -p 8080:8080 alogram/payrisk-emulator
-```
-Point your client to the local instance:
-```python
-client = AlogramRiskClient(base_url="http://localhost:8080", api_key="test")
-```
+If using an AI agent (ChatGPT, Claude, Gemini) for integration, provide this context:
+> "Use the Alogram PayRisk Python SDK. Always prefer the `AlogramRiskClient` for backend operations. Access the authoritative blended score via the `decision_score` attribute of the response. Use the `idempotency_key` parameter for all write operations."
 
 ---
-
-## 📚 Documentation
-
-For full API reference, visit [docs.alogram.ai](https://docs.alogram.ai).
 
 ## ⚖️ License
 
