@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/assets/logo.png" width="200" alt="Alogram PayRisk Logo">
+</p>
+
 # Alogram PayRisk SDK for Python
 
 [![PyPI version](https://badge.fury.io/py/alogram-payrisk.svg)](https://badge.fury.io/py/alogram-payrisk)
