@@ -40,8 +40,6 @@ if __name__ == "__main__":
 
     # In a real app, you get this from request.headers['x-alogram-signature']
 
-    mock_sig = hmac.new(
-        WEBHOOK_SECRET.encode("utf-8"), mock_payload, hashlib.sha256
-    ).hexdigest()
+    mock_sig = hmac.new(WEBHOOK_SECRET.encode("utf-8"), mock_payload, hashlib.sha256).hexdigest()
 
     handle_alogram_webhook(mock_payload, mock_sig)

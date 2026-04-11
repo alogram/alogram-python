@@ -19,52 +19,47 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar, Dict, List, Optional, Set, Union
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
+from alogram_payrisk._generated.payrisk_v1.models.risk_level_enum import RiskLevelEnum
+from pydantic import (BaseModel, ConfigDict, Field, StrictFloat, StrictInt,
+                      StrictStr)
 from typing_extensions import Annotated, Self
 
 
-class OrderContext(BaseModel):
+class ExternalAssessment(BaseModel):
     """
-    Order context for the purchase.
+    ExternalAssessment
     """  # noqa: E501
 
-    order_id: Optional[StrictStr] = Field(
-        default=None, description="Unique identifier for the order.", alias="orderId"
+    source: StrictStr = Field(
+        description="The provider of the assessment (e.g., 'shopify', 'signifyd')."
     )
-    order_total: Optional[
-        Union[
-            Annotated[float, Field(le=1.0e7, strict=True, ge=0.01)],
-            Annotated[int, Field(le=10000000, strict=True, ge=1)],
-        ]
+    level: RiskLevelEnum
+    score: Optional[Union[StrictFloat, StrictInt]] = Field(
+        default=None,
+        description="The raw score provided by the 3rd party (if applicable).",
+    )
+    recommendation: Optional[StrictStr] = Field(
+        default=None, description="The specific action recommended by the 3rd party."
+    )
+    reason_codes: Optional[List[StrictStr]] = Field(
+        default=None,
+        description="Raw reason codes provided by the 3rd party vendor.",
+        alias="reasonCodes",
+    )
+    metadata: Optional[
+        Annotated[str, Field(min_length=1, strict=True, max_length=2048)]
     ] = Field(
         default=None,
-        description="Value of the purchase in the specified currency. Must be a positive number with up to two decimal places. ",
-        alias="orderTotal",
-    )
-    shipping_method: Optional[StrictStr] = Field(
-        default=None,
-        description="Shipping method for the order.",
-        alias="shippingMethod",
-    )
-    line_item_count: Optional[Annotated[int, Field(le=100, strict=True, ge=0)]] = Field(
-        default=None, description="Number of items in the order.", alias="lineItemCount"
+        description="Optional key-value pairs providing additional context for the request.  Each key should be descriptive, and values should not exceed 2048 characters.  Each key should be descriptive. ",
     )
     __properties: ClassVar[List[str]] = [
-        "orderId",
-        "orderTotal",
-        "shippingMethod",
-        "lineItemCount",
+        "source",
+        "level",
+        "score",
+        "recommendation",
+        "reasonCodes",
+        "metadata",
     ]
-
-    @field_validator("shipping_method")
-    def shipping_method_validate_enum(cls, value):
-        """Validates the enum"""
-        if value is None:
-            return value
-
-        if value not in set(["digital", "ship", "bopis"]):
-            raise ValueError("must be one of enum values ('digital', 'ship', 'bopis')")
-        return value
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -83,7 +78,7 @@ class OrderContext(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of OrderContext from a JSON string"""
+        """Create an instance of ExternalAssessment from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -107,7 +102,7 @@ class OrderContext(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of OrderContext from a dict"""
+        """Create an instance of ExternalAssessment from a dict"""
         if obj is None:
             return None
 
@@ -118,16 +113,18 @@ class OrderContext(BaseModel):
         for _key in obj.keys():
             if _key not in cls.__properties:
                 raise ValueError(
-                    "Error due to additional fields (not defined in OrderContext) in the input: "
+                    "Error due to additional fields (not defined in ExternalAssessment) in the input: "
                     + _key
                 )
 
         _obj = cls.model_validate(
             {
-                "orderId": obj.get("orderId"),
-                "orderTotal": obj.get("orderTotal"),
-                "shippingMethod": obj.get("shippingMethod"),
-                "lineItemCount": obj.get("lineItemCount"),
+                "source": obj.get("source"),
+                "level": obj.get("level"),
+                "score": obj.get("score"),
+                "recommendation": obj.get("recommendation"),
+                "reasonCodes": obj.get("reasonCodes"),
+                "metadata": obj.get("metadata"),
             }
         )
         return _obj

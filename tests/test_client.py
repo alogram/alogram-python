@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from alogram_payrisk import (
     AlogramPublicClient,
     AlogramRiskClient,
@@ -21,9 +20,7 @@ PUBLIC_KEY = "pk_test_12345"
 
 @pytest.fixture
 def client():
-    return AlogramRiskClient(
-        base_url=BASE_URL, api_key=SECRET_KEY, tenant_id="tid_default"
-    )
+    return AlogramRiskClient(base_url=BASE_URL, api_key=SECRET_KEY, tenant_id="tid_default")
 
 
 def build_valid_request_dict():
@@ -55,7 +52,7 @@ def mock_rest_response(status, data=None, headers=None, reason=None):
     resp.status = status
     resp.reason = reason or "OK"
     resp.data = json.dumps(data).encode("utf-8") if data is not None else b""
-    
+
     # Ensure headers is a real dict for the generated client's ApiResponse validation
     headers_dict = headers or {"content-type": "application/json"}
     resp.headers = headers_dict
@@ -88,6 +85,7 @@ def test_check_risk_success(client):
         "assessmentId": "as_12345678901234567890123456789012",
         "decision": "approve",
         "riskScore": 0.1,
+        "decisionScore": 0.1,
         "paymentIntentId": "pi_12345678901234567890123456789012",
         "decisionAt": datetime.now(timezone.utc).isoformat(),
     }
@@ -117,6 +115,7 @@ def test_retry_logic_on_500(client):
         "assessmentId": "as_retrysuccess12345678901234567",
         "decision": "approve",
         "riskScore": 0.5,
+        "decisionScore": 0.5,
         "paymentIntentId": "pi_00000000000000000000000000000000",
         "decisionAt": datetime.now(timezone.utc).isoformat(),
     }

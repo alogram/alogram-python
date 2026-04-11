@@ -6,6 +6,7 @@
 # across multiple service restarts, Alogram will treat it as the same assessment.
 
 import uuid
+
 from alogram_payrisk import AlogramRiskClient, CheckRequest
 
 client = AlogramRiskClient(base_url="https://api.alogram.ai", api_key="sk_test_...")
@@ -44,9 +45,7 @@ def handle_checkout(order_id, user_id, amount):
             trace_id=f"req_{uuid.uuid4().hex[:8]}",
         )
 
-        print(
-            f"Order {order_id} | Decision: {decision.decision} | ID: {decision.assessment_id}"
-        )
+        print(f"Order {order_id} | Decision: {decision.decision} | ID: {decision.assessment_id}")
 
     except Exception as e:
         print(f"Risk check failed for {order_id}: {e}")
