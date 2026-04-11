@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/assets/logo.png" width="200" alt="Alogram PayRisk Logo">
+  <img src="https://raw.githubusercontent.com/alogram/alogram-python/main/.github/assets/logo.png" width="200" alt="Alogram PayRisk Logo">
 </p>
 
 # Alogram PayRisk SDK for Python
