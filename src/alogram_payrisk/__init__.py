@@ -1,82 +1,83 @@
 # Copyright (c) 2025 Alogram Inc.
 # All rights reserved.
 
-from ._generated.payrisk_v1.models.card import Card
-from ._generated.payrisk_v1.models.wallet import Wallet
-from ._generated.payrisk_v1.models.realtime import Realtime
-from ._generated.payrisk_v1.models.bank_transfer import BankTransfer
-from ._generated.payrisk_v1.models.crypto import Crypto
-from ._generated.payrisk_v1.models.invoice import Invoice
-from ._generated.payrisk_v1.models.integrity import Integrity
-from ._generated.payrisk_v1.models.postal_address import PostalAddress
-from ._generated.payrisk_v1.models.signals_account_variant import SignalsAccountVariant
-from ._generated.payrisk_v1.models.signals_interaction_variant import (
-    SignalsInteractionVariant,
-)
-from ._generated.payrisk_v1.models.account import Account
-from ._generated.payrisk_v1.models.interaction import Interaction
+import os
+import sys
 
-# 3. Canonical Models (Flattened for ergonomic use)
-from ._generated.payrisk_v1.models.check_request import CheckRequest
-from ._generated.payrisk_v1.models.decision_response import DecisionResponse
-from ._generated.payrisk_v1.models.device_info import DeviceInfo
-from ._generated.payrisk_v1.models.entity_ids import EntityIds
-from ._generated.payrisk_v1.models.identity import Identity
-from ._generated.payrisk_v1.models.ip_info import IpInfo
-from ._generated.payrisk_v1.models.merchant_context import MerchantContext
-from ._generated.payrisk_v1.models.order_context import OrderContext
-from ._generated.payrisk_v1.models.payment_event import PaymentEvent
-from ._generated.payrisk_v1.models.payment_method import PaymentMethod
-from ._generated.payrisk_v1.models.payment_outcome import PaymentOutcome
-from ._generated.payrisk_v1.models.payment_authorization_outcome import (
-    PaymentAuthorizationOutcome,
-)
-
-from ._generated.payrisk_v1.models.purchase import Purchase
-from ._generated.payrisk_v1.models.signals_request import SignalsRequest
+# 🚀 Standard Vendoring: Make the internal 'payrisk_v1' package discoverable
+# This allows machine-generated models to resolve their absolute imports
+# (e.g. from payrisk_v1.models...) without manual source patches.
+_internal_path = os.path.join(os.path.dirname(__file__), "_generated")
+if _internal_path not in sys.path:
+    sys.path.insert(0, _internal_path)
 
 # 1. Core Clients
-from .client import AlogramPublicClient, AlogramRiskClient
+from .client import AlogramPublicClient, AlogramRiskClient  # noqa: E402
 
-# 2. Professional Exceptions
-from .exceptions import (
+# 2. Canonical Models (Ergonomic exports for SDK users)
+from payrisk_v1.models.card import Card  # noqa: E402
+from payrisk_v1.models.wallet import Wallet  # noqa: E402
+from payrisk_v1.models.realtime import Realtime  # noqa: E402
+from payrisk_v1.models.bank_transfer import BankTransfer  # noqa: E402
+from payrisk_v1.models.crypto import Crypto  # noqa: E402
+from payrisk_v1.models.invoice import Invoice  # noqa: E402
+from payrisk_v1.models.integrity import Integrity  # noqa: E402
+from payrisk_v1.models.postal_address import PostalAddress  # noqa: E402
+from payrisk_v1.models.signals_account_variant import SignalsAccountVariant  # noqa: E402
+from payrisk_v1.models.signals_interaction_variant import (
+    SignalsInteractionVariant,
+)  # noqa: E402
+from payrisk_v1.models.account import Account  # noqa: E402
+from payrisk_v1.models.interaction import Interaction  # noqa: E402
+
+# Canonical Models (Flattened for ergonomic use)
+from payrisk_v1.models.check_request import CheckRequest  # noqa: E402
+from payrisk_v1.models.decision_response import DecisionResponse  # noqa: E402
+from payrisk_v1.models.device_info import DeviceInfo  # noqa: E402, F401
+from payrisk_v1.models.entity_ids import EntityIds  # noqa: E402
+from payrisk_v1.models.identity import Identity  # noqa: E402
+from payrisk_v1.models.ip_info import IpInfo  # noqa: E402
+from payrisk_v1.models.merchant_context import MerchantContext  # noqa: E402, F401
+from payrisk_v1.models.order_context import OrderContext  # noqa: E402, F401
+from payrisk_v1.models.payment_event import PaymentEvent  # noqa: E402
+from payrisk_v1.models.payment_method import PaymentMethod  # noqa: E402
+from payrisk_v1.models.payment_outcome import PaymentOutcome  # noqa: E402
+from payrisk_v1.models.payment_authorization_outcome import (
+    PaymentAuthorizationOutcome,
+)  # noqa: E402
+
+from payrisk_v1.models.purchase import Purchase  # noqa: E402
+from payrisk_v1.models.signals_request import SignalsRequest  # noqa: E402
+
+# 3. Professional Exceptions
+from .exceptions import (  # noqa: E402
     AlogramError,
     AuthenticationError,
-    InternalServerError,
     RateLimitError,
+    InternalServerError,
     ScopedAccessError,
     ValidationError,
 )
-from .testing import MockRiskClient
-
-# 2.1 Webhook Security
-from .webhooks import WebhookVerifier
 
 __all__ = [
-    "AlogramRiskClient",
     "AlogramPublicClient",
-    "MockRiskClient",
-    "AlogramError",
-    "AuthenticationError",
-    "RateLimitError",
-    "ValidationError",
-    "InternalServerError",
-    "ScopedAccessError",
-    "WebhookVerifier",
+    "AlogramRiskClient",
     "CheckRequest",
     "DecisionResponse",
     "DeviceInfo",
-    "SignalsRequest",
-    "SignalsAccountVariant",
-    "SignalsInteractionVariant",
-    "Account",
-    "Interaction",
+    "EntityIds",
+    "Purchase",
+    "PaymentMethod",
     "PaymentEvent",
     "PaymentOutcome",
     "PaymentAuthorizationOutcome",
-    "Purchase",
-    "EntityIds",
-    "PaymentMethod",
+    "SignalsRequest",
+    "AlogramError",
+    "AuthenticationError",
+    "RateLimitError",
+    "InternalServerError",
+    "ScopedAccessError",
+    "ValidationError",
     "Card",
     "Wallet",
     "Realtime",
@@ -87,6 +88,8 @@ __all__ = [
     "IpInfo",
     "Integrity",
     "PostalAddress",
-    "MerchantContext",
-    "OrderContext",
+    "SignalsAccountVariant",
+    "SignalsInteractionVariant",
+    "Account",
+    "Interaction",
 ]
