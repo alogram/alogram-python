@@ -6,15 +6,15 @@ import time
 import uuid
 from typing import Any, Dict, List, Optional, Union
 
-from alogram_payrisk._generated.payrisk_v1.models.decision_response import (
+from payrisk_v1.models.decision_response import (
     DecisionResponse,
 )
-from alogram_payrisk._generated.payrisk_v1.models.fraud_score import FraudScore
-from alogram_payrisk._generated.payrisk_v1.models.reason_detail import ReasonDetail
-from alogram_payrisk._generated.payrisk_v1.models.risk_category_enum import (
+from payrisk_v1.models.fraud_score import FraudScore
+from payrisk_v1.models.reason_detail import ReasonDetail
+from payrisk_v1.models.risk_category_enum import (
     RiskCategoryEnum,
 )
-from alogram_payrisk._generated.payrisk_v1.models.risk_level_enum import RiskLevelEnum
+from payrisk_v1.models.risk_level_enum import RiskLevelEnum
 
 
 class MockRiskClient:

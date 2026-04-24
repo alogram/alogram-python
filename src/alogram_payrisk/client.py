@@ -2,6 +2,7 @@
 # All rights reserved.
 
 import logging
+import threading
 import uuid
 from typing import Any, Optional, cast
 
@@ -22,17 +23,18 @@ except ImportError:
     trace = None  # type: ignore
 
 # Internal Imports
-from ._generated.payrisk_v1.api.risk_scoring_api import RiskScoringApi
-from ._generated.payrisk_v1.api.signal_intelligence_api import SignalIntelligenceApi
-from ._generated.payrisk_v1.api.forensic_data_api import ForensicDataApi
-from ._generated.payrisk_v1.api_client import ApiClient
-from ._generated.payrisk_v1.configuration import Configuration
-from ._generated.payrisk_v1.exceptions import ApiException
-from ._generated.payrisk_v1.models.check_request import CheckRequest
-from ._generated.payrisk_v1.models.decision_response import DecisionResponse
-from ._generated.payrisk_v1.models.payment_event import PaymentEvent
-from ._generated.payrisk_v1.models.signals_request import SignalsRequest
-from ._generated.payrisk_v1.models.scores_success_response import ScoresSuccessResponse
+from payrisk_v1.api.risk_scoring_api import RiskScoringApi
+from payrisk_v1.api.signal_intelligence_api import SignalIntelligenceApi
+from payrisk_v1.api.forensic_data_api import ForensicDataApi
+from payrisk_v1.api.system_api import SystemApi
+from payrisk_v1.api_client import ApiClient
+from payrisk_v1.configuration import Configuration
+from payrisk_v1.exceptions import ApiException
+from payrisk_v1.models.check_request import CheckRequest
+from payrisk_v1.models.decision_response import DecisionResponse
+from payrisk_v1.models.payment_event import PaymentEvent
+from payrisk_v1.models.signals_request import SignalsRequest
+from payrisk_v1.models.scores_success_response import ScoresSuccessResponse
 
 # Public Exceptions
 from .exceptions import (
@@ -59,6 +61,9 @@ class AlogramBaseClient:
 
     tracer: Optional["trace.Tracer"]  # type: ignore
 
+    _shared_pool: Optional[Any] = None
+    _lock = threading.Lock()
+
     def __init__(
         self,
         base_url: str = "https://api.alogram.ai",
@@ -71,15 +76,23 @@ class AlogramBaseClient:
         self.configuration = Configuration(host=base_url)
         self.configuration.debug = debug
 
-        # 🛡️ SECURITY: Prevent raw http.client/urllib3 from leaking unmasked secrets to stdout
-        # when debug=True. We want our own masked logs, not the raw library output.
+        # 🛡️ SECURITY: Prevent raw http.client/urllib3 from leaking unmasked secrets
         if debug:
             import http.client as httplib
-
             httplib.HTTPConnection.debuglevel = 0
             logging.getLogger("urllib3").setLevel(logging.INFO)
 
+        # 🏎️ Alogram: Share connection pool across all instances for HTTP/2 performance
+        # We wrap the shared pool in a new ApiClient to ensure HEADERS remain isolated.
         self.api_client = ApiClient(self.configuration)
+        
+        with AlogramBaseClient._lock:
+            if AlogramBaseClient._shared_pool is None:
+                # First initialization creates the canonical pool
+                AlogramBaseClient._shared_pool = self.api_client.rest_client
+            else:
+                # Subsequent instances reuse the existing pool
+                self.api_client.rest_client = AlogramBaseClient._shared_pool
 
         if api_key:
             self.api_client.set_default_header("x-api-key", api_key)
@@ -95,12 +108,44 @@ class AlogramBaseClient:
         self.risk_scoring = RiskScoringApi(self.api_client)
         self.signals = SignalIntelligenceApi(self.api_client)
         self.forensics = ForensicDataApi(self.api_client)
+        self.system = SystemApi(self.api_client)
+
 
         # Initialize Tracer
         if OTEL_AVAILABLE:
-            self.tracer = trace.get_tracer("alogram.payrisk", "0.2.8")
+            self.tracer = trace.get_tracer("alogram.payrisk", "0.2.9")
         else:
             self.tracer = None  # type: ignore
+
+    def wait_for_ready(self, timeout_secs: int = 60) -> bool:
+        """
+        🚀 Intelligent Handshake: Wait for the infrastructure to wake up.
+        This sends lightweight health checks with exponential backoff to warm up
+        Cloud Run instances and Load Balancer proxies before actual testing.
+        """
+        import time
+
+        log.info(f"⏳ Performing infrastructure handshake (timeout: {timeout_secs}s)...")
+        start_time = time.time()
+        attempt = 1
+
+        while (time.time() - start_time) < timeout_secs:
+            try:
+                # Lightweight GET /v1/health
+                self.system.health_check(_request_timeout=5)
+                log.info("✅ Infrastructure is READY.")
+                return True
+            except Exception:
+                wait_time = min(2**attempt, 10)
+                log.warning(
+                    f"⚠️ Handshake attempt {attempt} failed (Infrastructure still warming up). "
+                    f"Retrying in {wait_time}s..."
+                )
+                time.sleep(wait_time)
+                attempt += 1
+
+        log.error("❌ Infrastructure handshake TIMEOUT.")
+        return False
 
     def _generate_id(self, prefix: str) -> str:
         return f"{prefix}_{uuid.uuid4().hex}"

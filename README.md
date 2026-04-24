@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/assets/logo.png" width="200" alt="Alogram PayRisk Logo">
+  <img src="https://raw.githubusercontent.com/alogram/alogram-python/main/.github/assets/logo.png" width="200" alt="Alogram PayRisk Logo">
 </p>
 
 # Alogram PayRisk SDK for Python
@@ -10,7 +10,6 @@
 The official Python client for the **Alogram PayRisk Engine**. 
 
 Alogram PayRisk is a decision management and risk orchestration engine for global commerce. It fuses machine learning, behavioral analytics, and deterministic business rules into a high-fidelity scoring pipeline designed for enterprise scale and auditability.
-
 ## 🧠 The Three-Expert Architecture
 
 The SDK provides unified access to three specialized risk experts:
@@ -19,8 +18,50 @@ The SDK provides unified access to three specialized risk experts:
 -   **Signal Intelligence**: Ingestion of behavioral telemetry and payment lifecycle events.
 -   **Forensic Data**: Deep visibility into historical assessments and decision transparency.
 
-## 🚀 Features
+---
 
+## 🔐 Security: Trust Boundaries
+
+Alogram enforces a strict separation between client-side telemetry and server-side decisioning.
+
+| Client Type | Key Prefix | Environment | Capabilities |
+| :--- | :--- | :--- | :--- |
+| **`AlogramPublicClient`** | `pk_...` | Browser / Mobile | **Ingestion only.** Cannot perform risk checks or view scores. |
+| **`AlogramRiskClient`** | `sk_...` | Secure Backend | **Full access.** Authorized for risk decisions and forensic retrieval. |
+
+> [!WARNING]
+> **Never** use a Secret Key (`sk_...`) in a client-side environment. This will expose your tenant's sensitive forensic data.
+
+---
+
+## 🔄 Full Lifecycle Integration
+
+A best-in-class Alogram integration follows the three-step lifecycle:
+
+```python
+from alogram_payrisk import AlogramRiskClient
+from payrisk_v1 import CheckRequest, PaymentEvent
+
+# 1. Initialize the Secret Client (Backend Only)
+with AlogramRiskClient(api_key="sk_live_...", tenant_id="tid_mycorp") as client:
+
+    # 2. Assessment: Call before charging the customer
+    decision = client.check_risk(CheckRequest(...))
+
+    if decision.decision == "approve":
+        # Process payment via your gateway...
+
+        # 3. Lifecycle: Send the outcome back to Alogram
+        client.ingest_event(PaymentEvent(
+            payment_intent_id=decision.payment_intent_id,
+            event_type="authorization",
+            outcome={"approved": True}
+        ))
+```
+
+---
+
+## 🚀 High-Performance Integration
 -   **🏢 Smart Client Architecture**: Specialized clients for server-side (`AlogramRiskClient`) and public-facing (`AlogramPublicClient`).
 -   **🛡️ Automated Identity**: Injects `x-api-key`, `Authorization`, and tenant headers automatically.
 -   **🔄 Built-in Resiliency**: Automatic exponential backoff and jittered retries (powered by `tenacity`).
@@ -71,7 +112,26 @@ client.ingest_event(PaymentEvent(
 ))
 ```
 
+### 🔄 3. Full Lifecycle Workflow
+
+For a complete end-to-end example showing how to correlate **client-side signals**, **risk scoring**, and **fraud labeling**, see:
+👉 [examples/full_lifecycle_workflow.py](examples/full_lifecycle_workflow.py)
+
+This workflow demonstrates how to:
+1.  **Anchor** pre-order signals using `sessionId` and `deviceId`.
+2.  **Correlate** those signals during the `check_risk` call.
+3.  **Handoff** to the server-minted `paymentIntentId` for post-order events (Auth, Capture, Chargeback).
+
 ---
+
+## 🚀 High-Performance Integration
+
+To ensure sub-second risk assessment latencies and handle high-volume signal telemetry efficiently, please adhere to these network best practices:
+
+-   **Persistent Client (Mandatory):** Maintain a single, global instance of the `AlogramRiskClient` or use it as a Context Manager. 
+    -   *Anti-pattern:* Creating a new client for every request forces a fresh TCP/TLS handshake.
+    -   *Best Practice:* Reuse the client to keep the underlying `httpx` session "hot."
+-   **HTTP/2 Multiplexing:** The SDK natively supports HTTP/2. By reusing the client, multiple requests (e.g., several signals) are automatically multiplexed over a single persistent pipe, eliminating connection management overhead.
 
 ## 🛡️ Error Handling & Resiliency
 
