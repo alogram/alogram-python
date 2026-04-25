@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "alogram-payrisk"
-version = "0.2.9"
+version = "0.2.10"
 description = "The official Alogram Payrisk 'Smart' SDK for Python. Features built-in resiliency, ergonomic risk intelligence, and automated identity management."
 readme = "README.md"
 requires-python = ">=3.10"
