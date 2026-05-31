@@ -19,27 +19,35 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar, Dict, List, Optional, Set
 
-from payrisk_v1.models.payment_wallet_type_enum import PaymentWalletTypeEnum
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
-from typing_extensions import Self
+from typing_extensions import Annotated, Self
 
 
-class Wallet(BaseModel):
+class AuthContext(BaseModel):
     """
-    Digital wallet attributes (e.g., PayPal, Apple Pay, Google Pay).
+    Contextual identity information from the authentication layer.
     """  # noqa: E501
 
-    type: StrictStr = Field(description="Fixed to `wallet` for this schema.")
-    wallet_type: Optional[PaymentWalletTypeEnum] = Field(
-        default=None, alias="walletType"
+    uid: Optional[Annotated[str, Field(min_length=10, max_length=128)]] = Field(
+        default=None,
+        description='Unique identifier for an authenticated principal (e.g., an identity provider UID or Subject).  Unprefixed and case-sensitive. Supports common OIDC characters like ":", "|", "@", and ".". ',
     )
-    __properties: ClassVar[List[str]] = ["type", "walletType"]
+    provider: Optional[StrictStr] = Field(
+        default=None,
+        description='The identity provider type (e.g., "external", "oidc", "saml").',
+    )
+    __properties: ClassVar[List[str]] = ["uid", "provider"]
 
-    @field_validator("type")
-    def type_validate_enum(cls, value):
-        """Validates the enum"""
-        if value not in set(["wallet"]):
-            raise ValueError("must be one of enum values ('wallet')")
+    @field_validator("uid")
+    def uid_validate_regular_expression(cls, value):
+        """Validates the regular expression"""
+        if value is None:
+            return value
+
+        if not re.match(r"^[a-zA-Z0-9\-_:|@.]{10,128}$", value):
+            raise ValueError(
+                r"must validate the regular expression /^[a-zA-Z0-9\-_:|@.]{10,128}$/"
+            )
         return value
 
     model_config = ConfigDict(
@@ -59,7 +67,7 @@ class Wallet(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of Wallet from a JSON string"""
+        """Create an instance of AuthContext from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -83,7 +91,7 @@ class Wallet(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of Wallet from a dict"""
+        """Create an instance of AuthContext from a dict"""
         if obj is None:
             return None
 
@@ -94,11 +102,11 @@ class Wallet(BaseModel):
         for _key in obj.keys():
             if _key not in cls.__properties:
                 raise ValueError(
-                    "Error due to additional fields (not defined in Wallet) in the input: "
+                    "Error due to additional fields (not defined in AuthContext) in the input: "
                     + _key
                 )
 
         _obj = cls.model_validate(
-            {"type": obj.get("type"), "walletType": obj.get("walletType")}
+            {"uid": obj.get("uid"), "provider": obj.get("provider")}
         )
         return _obj

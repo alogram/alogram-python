@@ -21,23 +21,21 @@ from enum import Enum
 from typing_extensions import Self
 
 
-class ScaMethodEnum(str, Enum):
+class AgentProvider(str, Enum):
     """
-    The method used for Strong Customer Authentication (SCA).
+    The AI system provider that issued the agent manifest.
     """
 
     """
     allowed enum values
     """
-    NONE = "none"
-    ENUM_3DS_V1 = "3ds_v1"
-    ENUM_3DS_V2 = "3ds_v2"
-    OTP_SMS = "otp_sms"
-    BIOMETRIC = "biometric"
-    FIDO2 = "fido2"
+    GOOGLE = "google"
+    OPENAI = "openai"
+    ANTHROPIC = "anthropic"
+    ALOGRAM = "alogram"
     OTHER = "other"
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of ScaMethodEnum from a JSON string"""
+        """Create an instance of AgentProvider from a JSON string"""
         return cls(json.loads(json_str))

@@ -19,28 +19,17 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar, Dict, List, Optional, Set
 
-from payrisk_v1.models.payment_wallet_type_enum import PaymentWalletTypeEnum
-from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, StrictStr
 from typing_extensions import Self
 
 
-class Wallet(BaseModel):
+class IngestPaymentEvent202Response(BaseModel):
     """
-    Digital wallet attributes (e.g., PayPal, Apple Pay, Google Pay).
+    IngestPaymentEvent202Response
     """  # noqa: E501
 
-    type: StrictStr = Field(description="Fixed to `wallet` for this schema.")
-    wallet_type: Optional[PaymentWalletTypeEnum] = Field(
-        default=None, alias="walletType"
-    )
-    __properties: ClassVar[List[str]] = ["type", "walletType"]
-
-    @field_validator("type")
-    def type_validate_enum(cls, value):
-        """Validates the enum"""
-        if value not in set(["wallet"]):
-            raise ValueError("must be one of enum values ('wallet')")
-        return value
+    status: Optional[StrictStr] = None
+    __properties: ClassVar[List[str]] = ["status"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -59,7 +48,7 @@ class Wallet(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of Wallet from a JSON string"""
+        """Create an instance of IngestPaymentEvent202Response from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -83,7 +72,7 @@ class Wallet(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of Wallet from a dict"""
+        """Create an instance of IngestPaymentEvent202Response from a dict"""
         if obj is None:
             return None
 
@@ -94,11 +83,9 @@ class Wallet(BaseModel):
         for _key in obj.keys():
             if _key not in cls.__properties:
                 raise ValueError(
-                    "Error due to additional fields (not defined in Wallet) in the input: "
+                    "Error due to additional fields (not defined in IngestPaymentEvent202Response) in the input: "
                     + _key
                 )
 
-        _obj = cls.model_validate(
-            {"type": obj.get("type"), "walletType": obj.get("walletType")}
-        )
+        _obj = cls.model_validate({"status": obj.get("status")})
         return _obj

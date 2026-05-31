@@ -17,29 +17,48 @@ from __future__ import annotations
 import json
 import pprint
 import re  # noqa: F401
-from typing import Any, ClassVar, Dict, List, Optional, Set
+from typing import Any, ClassVar, Dict, List, Optional, Set, Union
 
-from payrisk_v1.models.payment_wallet_type_enum import PaymentWalletTypeEnum
+from payrisk_v1.models.agent_provider import AgentProvider
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
-from typing_extensions import Self
+from typing_extensions import Annotated, Self
 
 
-class Wallet(BaseModel):
+class AgentManifest(BaseModel):
     """
-    Digital wallet attributes (e.g., PayPal, Apple Pay, Google Pay).
+    Proof of delegation for an autonomous shopping agent (UCP/MCP compatible).  Allows PayRisk to verify the \"Who\" and \"Trust\" behind a machine-driven transaction.
     """  # noqa: E501
 
-    type: StrictStr = Field(description="Fixed to `wallet` for this schema.")
-    wallet_type: Optional[PaymentWalletTypeEnum] = Field(
-        default=None, alias="walletType"
+    provider: AgentProvider
+    model: StrictStr = Field(description="Specific model version of the agent.")
+    principal_id: Annotated[str, Field(min_length=6, max_length=100)] = Field(
+        description='Canonical ID for the client’s end user / consumer (account holder).  Opaque, immutable, lowercase. Supports "ecid_" slugs (Legacy) or "cus_" hex (Preferred). ',
+        alias="principalId",
     )
-    __properties: ClassVar[List[str]] = ["type", "walletType"]
+    trust_tier: Union[
+        Annotated[float, Field(le=1.0, ge=0.0)], Annotated[int, Field(le=1, ge=0)]
+    ] = Field(
+        description="Platform-provided reputation score for the agent.",
+        alias="trustTier",
+    )
+    capabilities: Optional[List[StrictStr]] = Field(
+        default=None, description="Authorized scope of authority for the agent."
+    )
+    __properties: ClassVar[List[str]] = [
+        "provider",
+        "model",
+        "principalId",
+        "trustTier",
+        "capabilities",
+    ]
 
-    @field_validator("type")
-    def type_validate_enum(cls, value):
-        """Validates the enum"""
-        if value not in set(["wallet"]):
-            raise ValueError("must be one of enum values ('wallet')")
+    @field_validator("principal_id")
+    def principal_id_validate_regular_expression(cls, value):
+        """Validates the regular expression"""
+        if not re.match(r"^(ecid_[a-z0-9\-_]{2,96}|cus_[a-f0-9]{32})$", value):
+            raise ValueError(
+                r"must validate the regular expression /^(ecid_[a-z0-9\-_]{2,96}|cus_[a-f0-9]{32})$/"
+            )
         return value
 
     model_config = ConfigDict(
@@ -59,7 +78,7 @@ class Wallet(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of Wallet from a JSON string"""
+        """Create an instance of AgentManifest from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -83,7 +102,7 @@ class Wallet(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of Wallet from a dict"""
+        """Create an instance of AgentManifest from a dict"""
         if obj is None:
             return None
 
@@ -94,11 +113,17 @@ class Wallet(BaseModel):
         for _key in obj.keys():
             if _key not in cls.__properties:
                 raise ValueError(
-                    "Error due to additional fields (not defined in Wallet) in the input: "
+                    "Error due to additional fields (not defined in AgentManifest) in the input: "
                     + _key
                 )
 
         _obj = cls.model_validate(
-            {"type": obj.get("type"), "walletType": obj.get("walletType")}
+            {
+                "provider": obj.get("provider"),
+                "model": obj.get("model"),
+                "principalId": obj.get("principalId"),
+                "trustTier": obj.get("trustTier"),
+                "capabilities": obj.get("capabilities"),
+            }
         )
         return _obj
