@@ -24,8 +24,8 @@ from payrisk_v1.models.invoice import Invoice  # noqa: E402
 from payrisk_v1.models.integrity import Integrity  # noqa: E402
 from payrisk_v1.models.postal_address import PostalAddress  # noqa: E402
 from payrisk_v1.models.signals_account_variant import SignalsAccountVariant  # noqa: E402
-from payrisk_v1.models.signals_interaction_variant import (
-    SignalsInteractionVariant,
+from payrisk_v1.models.signals_interaction_variant import (  # noqa: E402
+    SignalsInteractionVariant,  # noqa: E402
 )  # noqa: E402
 from payrisk_v1.models.account import Account  # noqa: E402
 from payrisk_v1.models.interaction import Interaction  # noqa: E402
@@ -42,8 +42,8 @@ from payrisk_v1.models.order_context import OrderContext  # noqa: E402, F401
 from payrisk_v1.models.payment_event import PaymentEvent  # noqa: E402
 from payrisk_v1.models.payment_method import PaymentMethod  # noqa: E402
 from payrisk_v1.models.payment_outcome import PaymentOutcome  # noqa: E402
-from payrisk_v1.models.payment_authorization_outcome import (
-    PaymentAuthorizationOutcome,
+from payrisk_v1.models.payment_authorization_outcome import (  # noqa: E402
+    PaymentAuthorizationOutcome,  # noqa: E402
 )  # noqa: E402
 
 from payrisk_v1.models.purchase import Purchase  # noqa: E402
