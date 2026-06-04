@@ -17,38 +17,26 @@ from __future__ import annotations
 import json
 import pprint
 import re  # noqa: F401
+from datetime import datetime
 from typing import Any, ClassVar, Dict, List, Optional, Set
 
-from payrisk_v1.models.account import Account
-from payrisk_v1.models.entity_ids import EntityIds
-from payrisk_v1.models.kyc_payload import KycPayload
-from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from typing_extensions import Self
 
 
-class KycCheckRequest(BaseModel):
+class DecisionResolutionResponse(BaseModel):
     """
-    KycCheckRequest
+    DecisionResolutionResponse
     """  # noqa: E501
 
-    event_subtype: StrictStr = Field(
-        description="The specific subtype of the KYC event.", alias="eventSubtype"
+    ok: StrictBool = Field(
+        description="Indicates if the decision was successfully resolved and persisted."
     )
-    entities: Optional[EntityIds] = None
-    account: Account
-    kyc: Optional[KycPayload] = None
-    __properties: ClassVar[List[str]] = ["eventSubtype", "entities", "account", "kyc"]
-
-    @field_validator("event_subtype")
-    def event_subtype_validate_enum(cls, value):
-        """Validates the enum"""
-        if value not in set(
-            ["pre_kyc_check", "doc_scan", "liveness", "address_check", "sanctions_pep"]
-        ):
-            raise ValueError(
-                "must be one of enum values ('pre_kyc_check', 'doc_scan', 'liveness', 'address_check', 'sanctions_pep')"
-            )
-        return value
+    message: StrictStr = Field(description="Operational summary message.")
+    resolved_at: datetime = Field(
+        description="ISO-8601 timestamp of resolution completion.", alias="resolvedAt"
+    )
+    __properties: ClassVar[List[str]] = ["ok", "message", "resolvedAt"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -67,7 +55,7 @@ class KycCheckRequest(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of KycCheckRequest from a JSON string"""
+        """Create an instance of DecisionResolutionResponse from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -87,20 +75,11 @@ class KycCheckRequest(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of entities
-        if self.entities:
-            _dict["entities"] = self.entities.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of account
-        if self.account:
-            _dict["account"] = self.account.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of kyc
-        if self.kyc:
-            _dict["kyc"] = self.kyc.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of KycCheckRequest from a dict"""
+        """Create an instance of DecisionResolutionResponse from a dict"""
         if obj is None:
             return None
 
@@ -111,28 +90,15 @@ class KycCheckRequest(BaseModel):
         for _key in obj.keys():
             if _key not in cls.__properties:
                 raise ValueError(
-                    "Error due to additional fields (not defined in KycCheckRequest) in the input: "
+                    "Error due to additional fields (not defined in DecisionResolutionResponse) in the input: "
                     + _key
                 )
 
         _obj = cls.model_validate(
             {
-                "eventSubtype": obj.get("eventSubtype"),
-                "entities": (
-                    EntityIds.from_dict(obj["entities"])
-                    if obj.get("entities") is not None
-                    else None
-                ),
-                "account": (
-                    Account.from_dict(obj["account"])
-                    if obj.get("account") is not None
-                    else None
-                ),
-                "kyc": (
-                    KycPayload.from_dict(obj["kyc"])
-                    if obj.get("kyc") is not None
-                    else None
-                ),
+                "ok": obj.get("ok"),
+                "message": obj.get("message"),
+                "resolvedAt": obj.get("resolvedAt"),
             }
         )
         return _obj

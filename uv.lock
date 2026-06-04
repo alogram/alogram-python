@@ -4,7 +4,7 @@ requires-python = ">=3.10"
 
 [[package]]
 name = "alogram-payrisk"
-version = "0.2.21"
+version = "0.2.23"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
