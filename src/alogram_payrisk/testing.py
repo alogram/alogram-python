@@ -9,12 +9,10 @@ from typing import Any, Dict, List, Optional, Union
 from payrisk_v1.models.decision_response import (
     DecisionResponse,
 )
-from payrisk_v1.models.fraud_score import FraudScore
 from payrisk_v1.models.reason_detail import ReasonDetail
 from payrisk_v1.models.risk_category_enum import (
     RiskCategoryEnum,
 )
-from payrisk_v1.models.risk_level_enum import RiskLevelEnum
 
 
 class MockRiskClient:
@@ -40,20 +38,11 @@ class MockRiskClient:
 
     def queue_decision(self, decision: str, score: float = 0.1, reason: Optional[str] = None):
         """Queue a specific decision response for the next call."""
-        # Map score to risk level roughly for the mock
-        risk_level = RiskLevelEnum.LOW
-        if score > 0.8:
-            risk_level = RiskLevelEnum.HIGH
-        elif score > 0.4:
-            risk_level = RiskLevelEnum.MEDIUM
-
         resp = DecisionResponse(
-            assessmentId=f"mock-{uuid.uuid4().hex[:12]}",
+            id=f"pi_mock-{uuid.uuid4().hex[:12]}",
             decision=decision.lower(),
             decisionAt=self._get_timestamp(),
-            fraudScore=FraudScore(riskLevel=risk_level, score=score, explanation="Mocked response"),
             riskScore=score,
-            decisionScore=score,
         )
         if reason:
             resp.reasons = [
@@ -105,18 +94,11 @@ class MockRiskClient:
         if res:
             return res
 
-        # Default response
-        risk_level = RiskLevelEnum.LOW
-        if self._default_score > 0.8:
-            risk_level = RiskLevelEnum.HIGH
-
         return DecisionResponse(
-            assessmentId=f"mock-{uuid.uuid4().hex[:12]}",
+            id=f"pi_mock-{uuid.uuid4().hex[:12]}",
             decision=self._default_decision.lower(),
             decisionAt=self._get_timestamp(),
-            fraudScore=FraudScore(riskLevel=risk_level, score=self._default_score),
             riskScore=self._default_score,
-            decisionScore=self._default_score,
             reasons=[
                 ReasonDetail(
                     code="DEFAULT",

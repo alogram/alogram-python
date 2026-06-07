@@ -82,11 +82,9 @@ def test_scoped_initialization():
 def test_check_risk_success(client):
     request_data = build_valid_request_dict()
     valid_response = {
-        "assessmentId": "as_12345678901234567890123456789012",
+        "id": "pi_12345678901234567890123456789012",
         "decision": "approve",
         "riskScore": 0.1,
-        "decisionScore": 0.1,
-        "paymentIntentId": "pi_12345678901234567890123456789012",
         "decisionAt": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -112,11 +110,9 @@ def test_public_client_restricted_methods():
 def test_retry_logic_on_500(client):
     request_data = build_valid_request_dict()
     valid_response = {
-        "assessmentId": "as_retrysuccess12345678901234567",
+        "id": "pi_retrysuccess12345678901234567",
         "decision": "approve",
         "riskScore": 0.5,
-        "decisionScore": 0.5,
-        "paymentIntentId": "pi_00000000000000000000000000000000",
         "decisionAt": datetime.now(timezone.utc).isoformat(),
     }
 

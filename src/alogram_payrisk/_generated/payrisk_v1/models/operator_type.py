@@ -1,4 +1,3 @@
-# This file is auto-generated. Do not modify manually.
 # coding: utf-8
 
 """
@@ -21,26 +20,19 @@ from enum import Enum
 from typing_extensions import Self
 
 
-class PaymentWalletTypeEnum(str, Enum):
+class OperatorType(str, Enum):
     """
-    The type of digital wallet used for the payment.
+    Semantic classification of the platform operator performing the action. Opaque, immutable, lowercase. Helps downstream ETLs partition telemetry cleanly.
     """
 
     """
     allowed enum values
     """
-    PAYPAL = "paypal"
-    APPLE_PAY = "apple_pay"
-    GOOGLE_PAY = "google_pay"
-    CASH_APP = "cash_app"
-    VENMO = "venmo"
-    LINK = "link"
-    SHOP_PAY = "shop_pay"
-    AMAZON_PAY = "amazon_pay"
-    SAMSUNG_PAY = "samsung_pay"
-    OTHER = "other"
+    HUMAN = "human"
+    SYSTEM = "system"
+    AUTONOMOUS_AGENT = "autonomous_agent"
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of PaymentWalletTypeEnum from a JSON string"""
+        """Create an instance of OperatorType from a JSON string"""
         return cls(json.loads(json_str))
