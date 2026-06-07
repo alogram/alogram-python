@@ -79,13 +79,14 @@ class AlogramBaseClient:
         # 🛡️ SECURITY: Prevent raw http.client/urllib3 from leaking unmasked secrets
         if debug:
             import http.client as httplib
+
             httplib.HTTPConnection.debuglevel = 0
             logging.getLogger("urllib3").setLevel(logging.INFO)
 
         # 🏎️ Alogram: Share connection pool across all instances for HTTP/2 performance
         # We wrap the shared pool in a new ApiClient to ensure HEADERS remain isolated.
         self.api_client = ApiClient(self.configuration)
-        
+
         with AlogramBaseClient._lock:
             if AlogramBaseClient._shared_pool is None:
                 # First initialization creates the canonical pool
@@ -110,10 +111,9 @@ class AlogramBaseClient:
         self.forensics = ForensicDataApi(self.api_client)
         self.system = SystemApi(self.api_client)
 
-
         # Initialize Tracer
         if OTEL_AVAILABLE:
-            self.tracer = trace.get_tracer("alogram.payrisk", "0.2.23")
+            self.tracer = trace.get_tracer("alogram.payrisk", "0.3.0")
         else:
             self.tracer = None  # type: ignore
 
@@ -270,8 +270,8 @@ class AlogramRiskClient(AlogramBaseClient):
                 # In 0.2.5, /v1/risk/check is part of RiskScoringApi
                 result = self.risk_scoring.risk_check(
                     check_request=request,
-                    x_idempotency_key=ik,
-                    x_trace_id=tid,
+                    idempotency_key=ik,
+                    trace_id=tid,
                 )
                 if span_ctx:
                     trace.get_current_span().set_attribute("alogram.decision", result.decision)
@@ -303,8 +303,8 @@ class AlogramRiskClient(AlogramBaseClient):
                 # In 0.2.5, ingestion is part of SignalIntelligenceApi
                 self.signals.ingest_signals(
                     signals_request=request,
-                    x_idempotency_key=ik,
-                    x_trace_id=tid,
+                    idempotency_key=ik,
+                    trace_id=tid,
                 )
         except ApiException as e:
             raise self._map_exception(e)
@@ -332,8 +332,8 @@ class AlogramRiskClient(AlogramBaseClient):
                 # In 0.2.5, ingestion is part of SignalIntelligenceApi
                 self.signals.ingest_payment_event(
                     payment_event=event,
-                    x_idempotency_key=ik,
-                    x_trace_id=tid,
+                    idempotency_key=ik,
+                    trace_id=tid,
                 )
         except ApiException as e:
             raise self._map_exception(e)
@@ -353,7 +353,7 @@ class AlogramRiskClient(AlogramBaseClient):
                 tenant_id=tenant_id,
                 start_time=kwargs.get("start_time"),
                 end_time=kwargs.get("end_time"),
-                x_trace_id=tid,
+                trace_id=tid,
             )
         except ApiException as e:
             raise self._map_exception(e)
@@ -412,8 +412,8 @@ class AlogramPublicClient(AlogramBaseClient):
                 # In 0.2.5, ingestion is part of SignalIntelligenceApi
                 self.signals.ingest_signals(
                     signals_request=request,
-                    x_idempotency_key=ik,
-                    x_trace_id=tid,
+                    idempotency_key=ik,
+                    trace_id=tid,
                 )
         except ApiException as e:
             raise self._map_exception(e)

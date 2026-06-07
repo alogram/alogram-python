@@ -19,22 +19,24 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar, Dict, List, Optional, Set
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool
-from typing_extensions import Annotated, Self
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing_extensions import Self
 
 
-class PaymentAuthorizationOutcome(BaseModel):
+class DecisionResponsePolicy(BaseModel):
     """
-    Authorization outcome details.
+    Structured policy metadata and context active during transaction evaluation.
     """  # noqa: E501
 
-    approved: Optional[StrictBool] = Field(
-        default=None, description="Indicates whether authorization was approved."
+    id: Optional[StrictStr] = Field(
+        default=None, description="The unique identifier of the active policy."
     )
-    response_code: Optional[Annotated[str, Field(max_length=16)]] = Field(
-        default=None, description="Authorization response code.", alias="responseCode"
+    rule_set: Optional[StrictStr] = Field(
+        default=None,
+        description="The name/version of the ruleset configuration.",
+        alias="ruleSet",
     )
-    __properties: ClassVar[List[str]] = ["approved", "responseCode"]
+    __properties: ClassVar[List[str]] = ["id", "ruleSet"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -53,7 +55,7 @@ class PaymentAuthorizationOutcome(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of PaymentAuthorizationOutcome from a JSON string"""
+        """Create an instance of DecisionResponsePolicy from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -77,7 +79,7 @@ class PaymentAuthorizationOutcome(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of PaymentAuthorizationOutcome from a dict"""
+        """Create an instance of DecisionResponsePolicy from a dict"""
         if obj is None:
             return None
 
@@ -88,11 +90,9 @@ class PaymentAuthorizationOutcome(BaseModel):
         for _key in obj.keys():
             if _key not in cls.__properties:
                 raise ValueError(
-                    "Error due to additional fields (not defined in PaymentAuthorizationOutcome) in the input: "
+                    "Error due to additional fields (not defined in DecisionResponsePolicy) in the input: "
                     + _key
                 )
 
-        _obj = cls.model_validate(
-            {"approved": obj.get("approved"), "responseCode": obj.get("responseCode")}
-        )
+        _obj = cls.model_validate({"id": obj.get("id"), "ruleSet": obj.get("ruleSet")})
         return _obj
