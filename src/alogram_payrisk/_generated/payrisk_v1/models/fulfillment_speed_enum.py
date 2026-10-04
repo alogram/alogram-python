@@ -21,23 +21,22 @@ from enum import Enum
 from typing_extensions import Self
 
 
-class PaymentEventType(str, Enum):
+class FulfillmentSpeedEnum(str, Enum):
     """
-    The type of payment lifecycle event.
+    Expected speed and channel of fulfillment.
     """
 
     """
     allowed enum values
     """
-    AUTHORIZATION = "authorization"
-    CAPTURE = "capture"
-    SETTLEMENT = "settlement"
-    REFUND = "refund"
-    DISPUTE = "dispute"
-    CHARGEBACK = "chargeback"
-    CHARGEBACK_OUTCOME = "chargeback_outcome"
+    STANDARD = "standard"
+    EXPRESS = "express"
+    OVERNIGHT = "overnight"
+    SAME_DAY = "same_day"
+    INSTANT_DIGITAL = "instant_digital"
+    BOPIS = "bopis"
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of PaymentEventType from a JSON string"""
+        """Create an instance of FulfillmentSpeedEnum from a JSON string"""
         return cls(json.loads(json_str))
