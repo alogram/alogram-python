@@ -21,23 +21,24 @@ from enum import Enum
 from typing_extensions import Self
 
 
-class PaymentEventType(str, Enum):
+class ItemCategoryEnum(str, Enum):
     """
-    The type of payment lifecycle event.
+    Standardized high-level commodity classification for fraud scoring.
     """
 
     """
     allowed enum values
     """
-    AUTHORIZATION = "authorization"
-    CAPTURE = "capture"
-    SETTLEMENT = "settlement"
-    REFUND = "refund"
-    DISPUTE = "dispute"
-    CHARGEBACK = "chargeback"
-    CHARGEBACK_OUTCOME = "chargeback_outcome"
+    PHYSICAL = "physical"
+    DIGITAL_CONTENT = "digital_content"
+    GIFT_CARD = "gift_card"
+    SUBSCRIPTION = "subscription"
+    SERVICE = "service"
+    TRAVEL = "travel"
+    CRYPTO_VOUCHER = "crypto_voucher"
+    OTHER = "other"
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of PaymentEventType from a JSON string"""
+        """Create an instance of ItemCategoryEnum from a JSON string"""
         return cls(json.loads(json_str))
